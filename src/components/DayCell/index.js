@@ -31,9 +31,11 @@ class DayCell extends Component {
 
     switch (event.type) {
       case 'mouseenter':
-        onMouseEnter(day);
-        onPreviewChange(day);
-        stateChanges.hover = true;
+        if (!this.props.isOutSideMaxDays) {
+          stateChanges.hover = true;
+          onMouseEnter(day);
+          onPreviewChange(day);
+        }
         break;
       case 'blur':
       case 'mouseleave':
@@ -41,15 +43,21 @@ class DayCell extends Component {
         break;
       case 'mousedown':
         stateChanges.active = true;
-        onMouseDown(day);
+        if (!this.props.isOutSideMaxDays) {
+          onMouseDown(day);
+        }
         break;
       case 'mouseup':
         event.stopPropagation();
         stateChanges.active = false;
-        onMouseUp(day);
+        if (!this.props.isOutSideMaxDays) {
+          onMouseUp(day);
+        }
         break;
       case 'focus':
-        onPreviewChange(day);
+        if (!this.props.isOutSideMaxDays) {
+          onPreviewChange(day);
+        }
         break;
     }
     if (Object.keys(stateChanges).length) {
@@ -83,14 +91,16 @@ class DayCell extends Component {
     });
   };
   renderPreviewPlaceholder = () => {
-    const { preview, day, styles } = this.props;
+    const { preview, day, styles, isOutSideMaxDays } = this.props;
     if (!preview) return null;
     const startDate = preview.startDate ? endOfDay(preview.startDate) : null;
     const endDate = preview.endDate ? startOfDay(preview.endDate) : null;
     const isInRange =
-      (!startDate || isAfter(day, startDate)) && (!endDate || isBefore(day, endDate));
-    const isStartEdge = !isInRange && isSameDay(day, startDate);
-    const isEndEdge = !isInRange && isSameDay(day, endDate);
+      (!startDate || isAfter(day, startDate)) &&
+      (!endDate || isBefore(day, endDate)) &&
+      !isOutSideMaxDays;
+    const isStartEdge = !isInRange && isSameDay(day, startDate) && !isOutSideMaxDays;
+    const isEndEdge = !isInRange && isSameDay(day, endDate) && !isOutSideMaxDays;
     return (
       <span
         className={classnames({
@@ -170,10 +180,9 @@ class DayCell extends Component {
         {this.renderSelectionPlaceholders()}
         {this.renderPreviewPlaceholder()}
         <span className={this.props.styles.dayNumber}>
-          {
-            dayContentRenderer?.(this.props.day) ||
+          {dayContentRenderer?.(this.props.day) || (
             <span>{format(this.props.day, this.props.dayDisplayFormat)}</span>
-          }
+          )}
         </span>
       </button>
     );
@@ -206,6 +215,7 @@ DayCell.propTypes = {
   previewColor: PropTypes.string,
   disabled: PropTypes.bool,
   isPassive: PropTypes.bool,
+  isOutSideMaxDays: PropTypes.bool,
   isToday: PropTypes.bool,
   isWeekend: PropTypes.bool,
   isStartOfWeek: PropTypes.bool,

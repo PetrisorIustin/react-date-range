@@ -14,6 +14,7 @@ import {
   isWeekend,
   isWithinInterval,
   eachDayOfInterval,
+  differenceInCalendarDays,
 } from 'date-fns';
 import { getMonthDisplayRange } from '../../utils';
 
@@ -36,7 +37,15 @@ function renderWeekdays(styles, dateOptions, weekdayDisplayFormat) {
 class Month extends PureComponent {
   render() {
     const now = new Date();
-    const { displayMode, focusedRange, drag, styles, disabledDates, disabledDay } = this.props;
+    const {
+      displayMode,
+      focusedRange,
+      drag,
+      styles,
+      disabledDates,
+      disabledDay,
+      maxDays,
+    } = this.props;
     const minDate = this.props.minDate && startOfDay(this.props.minDate);
     const maxDate = this.props.maxDate && endOfDay(this.props.maxDate);
     const monthDisplay = getMonthDisplayRange(
@@ -73,6 +82,18 @@ class Month extends PureComponent {
               const isEndOfMonth = isSameDay(day, monthDisplay.endDateOfMonth);
               const isOutsideMinMax =
                 (minDate && isBefore(day, minDate)) || (maxDate && isAfter(day, maxDate));
+
+              let startDate = this.props.startDate;
+              const isStartDateSelected = this.props.focusedRange[1] === 1;
+              if (!startDate && isStartDateSelected) {
+                startDate = this.props.preview?.startDate;
+                if (startDate && !isAfter(day, startDate)) {
+                  startDate = this.props.preview?.endDate;
+                }
+              }
+              const isGreatherThanMaxDays = maxDays
+                ? maxDays <= Math.abs(differenceInCalendarDays(day, startDate))
+                : false;
               const isDisabledSpecifically = disabledDates.some(disabledDate =>
                 isSameDay(disabledDate, day)
               );
@@ -90,7 +111,13 @@ class Month extends PureComponent {
                   isStartOfMonth={isStartOfMonth}
                   isEndOfMonth={isEndOfMonth}
                   key={index}
-                  disabled={isOutsideMinMax || isDisabledSpecifically || isDisabledDay}
+                  disabled={
+                    isOutsideMinMax ||
+                    isDisabledSpecifically ||
+                    isDisabledDay ||
+                    (isGreatherThanMaxDays && !isStartDateSelected)
+                  }
+                  isOutSideMaxDays={isGreatherThanMaxDays}
                   isPassive={
                     !isWithinInterval(day, {
                       start: monthDisplay.startDateOfMonth,
@@ -129,6 +156,8 @@ Month.propTypes = {
   }),
   showPreview: PropTypes.bool,
   displayMode: PropTypes.oneOf(['dateRange', 'date']),
+  startDate: PropTypes.object,
+  maxDays: PropTypes.number,
   minDate: PropTypes.object,
   maxDate: PropTypes.object,
   ranges: PropTypes.arrayOf(rangeShape),

@@ -461,6 +461,7 @@ class Calendar extends PureComponent {
                       {...this.props}
                       onPreviewChange={onPreviewChange || this.updatePreview}
                       preview={preview || this.state.preview}
+                      startDate={this.state.drag.range.startDate}
                       ranges={ranges}
                       key={key}
                       drag={this.state.drag}
@@ -493,7 +494,7 @@ class Calendar extends PureComponent {
               isVertical ? this.styles.monthsVertical : this.styles.monthsHorizontal
             )}>
             {new Array(this.props.months).fill(null).map((_, i) => {
-              let monthStep = addMonths(this.state.focusedDate, i);;
+              let monthStep = addMonths(this.state.focusedDate, i);
               if (this.props.calendarFocus === 'backwards') {
                 monthStep = subMonths(this.state.focusedDate, this.props.months - 1 - i);
               }
@@ -502,6 +503,7 @@ class Calendar extends PureComponent {
                   {...this.props}
                   onPreviewChange={onPreviewChange || this.updatePreview}
                   preview={preview || this.state.preview}
+                  startDate={this.state.drag.range.startDate}
                   ranges={ranges}
                   key={i}
                   drag={this.state.drag}
@@ -577,6 +579,7 @@ Calendar.propTypes = {
   shownDate: PropTypes.object,
   onShownDateChange: PropTypes.func,
   ranges: PropTypes.arrayOf(rangeShape),
+  maxDays: PropTypes.number,
   preview: PropTypes.shape({
     startDate: PropTypes.object,
     endDate: PropTypes.object,
